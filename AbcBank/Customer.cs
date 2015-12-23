@@ -10,6 +10,7 @@ namespace AbcBank
     {
         private String name;
         private List<Account> accounts;
+        private static object syncRoot = new Object();
 
         public Customer(String name)
         {
@@ -58,6 +59,28 @@ namespace AbcBank
             }
             statement += "\nTotal In All Accounts " + toDollars(total);
             return statement;
+        }
+
+        public void TransferBetweenAccounts(double amount, Guid accountFromId, Guid accountToId)
+        {
+            if (!accounts.Where(x => x.getId().Equals(accountFromId)).Any())
+                throw new ArgumentException("Unable to find account for customer. AccountId = " + accountFromId);
+
+            if (!accounts.Where(x => x.getId().Equals(accountToId)).Any())
+                throw new ArgumentException("Unable to find account for customer. AccountId = " + accountToId);
+
+            var accountFrom = accounts.Where(x => x.getId().Equals(accountFromId)).First();
+             var accountTo = accounts.Where(x => x.getId().Equals(accountToId)).First();
+
+            lock (syncRoot)
+            {
+                if (amount > accountFrom.sumTransactions())
+                    throw new ArgumentException("The amount needs to be greater than or equal to accout from balance");
+
+                accountFrom.withdraw(amount);
+            }
+
+            accountTo.deposit(amount);
         }
 
         private String statementForAccount(Account a)

@@ -9,11 +9,18 @@ namespace AbcBank
     public class DateProvider
     {
         private static DateProvider instance = null;
+        private static object syncRoot = new Object();
 
         public static DateProvider getInstance()
         {
             if (instance == null)
-                instance = new DateProvider();
+            {
+                lock (syncRoot)
+                {
+                    if (instance == null)
+                        instance = new DateProvider();
+                }
+            }
             return instance;
         }
 

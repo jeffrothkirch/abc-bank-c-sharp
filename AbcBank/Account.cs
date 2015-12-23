@@ -8,12 +8,12 @@ namespace AbcBank
 {
     public class Account
     {
-
         public const int CHECKING = 0;
         public const int SAVINGS = 1;
         public const int MAXI_SAVINGS = 2;
 
         private readonly int accountType;
+        private readonly Guid _id = Guid.NewGuid();
         public List<Transaction> transactions;
 
         public Account(int accountType)
@@ -56,18 +56,22 @@ namespace AbcBank
                         return amount * 0.001;
                     else
                         return 1 + (amount - 1000) * 0.002;
-                // case SUPER_SAVINGS:
-                //     if (amount <= 4000)
-                //         return 20;
                 case MAXI_SAVINGS:
-                    if (amount <= 1000)
-                        return amount * 0.02;
-                    if (amount <= 2000)
-                        return 20 + (amount - 1000) * 0.05;
-                    return 70 + (amount - 2000) * 0.1;
+                    if(transactions.Where(x => x.getTransactionDate().Date.AddDays(10) >= DateProvider.getInstance().now()).Any())
+                        return amount * 0.05;
+
+                    return amount * 0.010;
                 default:
-                    return amount * 0.001;
+                     return amount * 0.001;
             }
+        }
+
+        private double CalculateMaxiSavingsInterest(double amount)
+        {
+            if (transactions.Where(x => x.getTransactionDate().Date.AddDays(10) >= DateProvider.getInstance().now()).Any())
+                return 0.05;
+
+            return 0.010;
         }
 
         public double sumTransactions()
@@ -86,6 +90,11 @@ namespace AbcBank
         public int getAccountType()
         {
             return accountType;
+        }
+
+        public Guid getId()
+        {
+            return _id;
         }
 
     }
